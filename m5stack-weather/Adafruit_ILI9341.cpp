@@ -223,7 +223,7 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
             _height = ILI9341_TFTHEIGHT;
             break;
         case 1:
-            m = (MADCTL_MV | MADCTL_BGR);
+            m = (MADCTL_BGR);
             _width  = ILI9341_TFTHEIGHT;
             _height = ILI9341_TFTWIDTH;
             break;

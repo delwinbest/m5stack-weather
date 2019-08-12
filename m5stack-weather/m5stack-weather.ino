@@ -69,7 +69,7 @@ void setup() {
   ledcSetup(BLK_PWM_CHANNEL, 44100, 8);
   ledcAttachPin(TFT_BL, BLK_PWM_CHANNEL);
   ledcWrite(BLK_PWM_CHANNEL, 100);  // Set Brightness
-  tft.begin();tft.setRotation(0);tft.fillScreen(ILI9341_BLACK); tft.setTextSize(2);tft.println("Starting...");delay(1000);
+  tft.begin();tft.setRotation(1);tft.fillScreen(ILI9341_BLACK); tft.setTextSize(1);tft.println("Starting...");delay(1000);
   tft.fillScreen(ILI9341_BLACK);
   //set led pin as output
   pixels.begin(); 
