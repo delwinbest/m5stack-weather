@@ -2,6 +2,9 @@
 
 #include <WiFiManager.h> // NOTE: USED DEVELOPMENT BRANCH WHICH SUPPORTS ESP32  https://github.com/tzapu/WiFiManager
 #include <Adafruit_NeoPixel.h>
+#include "SPI.h"
+#include "Adafruit_GFX.h"
+#include "Adafruit_ILI9341.h"
 
 //for LED status
 #include <Ticker.h>
@@ -10,8 +13,19 @@ Ticker ticker;
 #define M5STACK_FIRE_NEO_NUM_LEDS 10
 #define M5STACK_FIRE_NEO_DATA_PIN 15
 #define PIXEL_STATUS_LED 0
+#define TFT_BL          32  // goes to TFT BL
+#define BLK_PWM_CHANNEL 7   // LEDC_CHANNEL_7
+#define TFT_CS          14  // goes to TFT CS
+#define TFT_DC          27  // goes to TFT DC
+#define TFT_MOSI        23  // goes to TFT MOSI
+#define TFT_SCLK        18  // goes to TFT SCK/CLK
+#define TFT_RST         33  // goes to TFT RESET
+#define TFT_MISO            // Not connected
+
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(M5STACK_FIRE_NEO_NUM_LEDS, M5STACK_FIRE_NEO_DATA_PIN, NEO_GRB + NEO_KHZ800);
+// If using software SPI change pins as desired
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
 uint32_t color_blue = pixels.Color(0, 0, 100);
 uint32_t color_white = pixels.Color(100, 100, 100);
@@ -51,7 +65,12 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  
+  // Init the back-light LED PWM
+  ledcSetup(BLK_PWM_CHANNEL, 44100, 8);
+  ledcAttachPin(TFT_BL, BLK_PWM_CHANNEL);
+  ledcWrite(BLK_PWM_CHANNEL, 100);  // Set Brightness
+  tft.begin();tft.setRotation(0);tft.fillScreen(ILI9341_BLACK); tft.setTextSize(2);tft.println("Starting...");delay(1000);
+  tft.fillScreen(ILI9341_BLACK);
   //set led pin as output
   pixels.begin(); 
   colorWipe(color_off, 50);
