@@ -1,8 +1,6 @@
 #include <simpleDSTadjust.h>
 
-#define M5STACK_FIRE_NEO_NUM_LEDS 10
-#define M5STACK_FIRE_NEO_DATA_PIN 15
-#define PIXEL_STATUS_LED 0
+
 #define TFT_BL          32  // goes to TFT BL
 #define BLK_PWM_CHANNEL 7   // LEDC_CHANNEL_7
 #define TFT_CS          14  // goes to TFT CS

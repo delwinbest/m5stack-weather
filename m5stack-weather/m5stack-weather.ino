@@ -1,7 +1,7 @@
 #include "settings.h"
+#include "Button.h"
 #include <WiFiManager.h> // NOTE: USED DEVELOPMENT BRANCH WHICH SUPPORTS ESP32  https://github.com/tzapu/WiFiManager
 #include <Adafruit_NeoPixel.h>
-#include "SPI.h"
 #include "ILI9341_SPI.h"
 #include "SunMoonCalc.h"
 
@@ -20,6 +20,11 @@
 #define MINI_WHITE 1
 #define MINI_YELLOW 2
 #define MINI_BLUE 3
+#define M5STACK_FIRE_NEO_NUM_LEDS 10
+#define M5STACK_FIRE_NEO_DATA_PIN 15
+#define BUTTON_A_PIN  39
+#define BUTTON_B_PIN  38
+#define BUTTON_C_PIN  37
 
 #define MAX_FORECASTS 12
 
@@ -42,7 +47,11 @@ bool   ticker_state = true;
 Ticker ticker;
 
 
-
+// Button API
+#define DEBOUNCE_MS 10
+Button BtnA = Button(BUTTON_A_PIN, true, DEBOUNCE_MS);
+Button BtnB = Button(BUTTON_B_PIN, true, DEBOUNCE_MS);
+Button BtnC = Button(BUTTON_C_PIN, true, DEBOUNCE_MS);
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(M5STACK_FIRE_NEO_NUM_LEDS, M5STACK_FIRE_NEO_DATA_PIN, NEO_GRB + NEO_KHZ800);
 // If using software SPI change pins as desired
@@ -53,8 +62,8 @@ ILI9341_SPI tft = ILI9341_SPI(TFT_CS, TFT_DC, TFT_RST);
 MiniGrafx gfx = MiniGrafx(&tft, BITS_PER_PIXEL, palette, 320, 240);
 Carousel carousel(&gfx, 0, 0, 240, 100);
 
-uint32_t color_blue = pixels.Color(0, 0, 255);
-uint32_t color_off = pixels.Color(0, 0, 0);
+//uint32_t color_blue = pixels.Color(0, 0, 255);
+//uint32_t color_off = pixels.Color(0, 0, 0);
 
 OpenWeatherMapCurrentData currentWeather;
 OpenWeatherMapForecastData forecasts[MAX_FORECASTS];
@@ -80,9 +89,8 @@ const char* getMeteoconIconFromProgmem(String iconText);
 const char* getMiniMeteoconIconFromProgmem(String iconText);
 void drawForecast1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y);
 void drawForecast2(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y);
-void drawForecast3(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y);
-FrameCallback frames[] = { drawForecast1, drawForecast2, drawForecast3 };
-int frameCount = 3;
+FrameCallback frames[] = { drawForecast1, drawForecast2 };
+int frameCount = 2;
 
 // how many different screens do we have?
 int screenCount = 5;
@@ -94,26 +102,26 @@ bool canBtnPress;
 time_t dstOffset = 0;
 
 // Fill the dots one after the other with a color
-void colorWipe(uint32_t color, uint8_t wait) {
-  for(uint16_t i=0; i<pixels.numPixels(); i++) {
-    pixels.setPixelColor(i, color);
-    pixels.show();
-    delay(wait);
-  }
-}
+//void colorWipe(uint32_t color, uint8_t wait) {
+//  for(uint16_t i=0; i<pixels.numPixels(); i++) {
+//    pixels.setPixelColor(i, color);
+//    pixels.show();
+//    delay(wait);
+//  }
+//}
 
 void tick()
 {
   //toggle state
   // set pin to the opposite state
-  if ( ticker_state == true ){
-    pixels.setPixelColor(PIXEL_STATUS_LED, color_blue);
-    ticker_state = false;
-  } else {
-    pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
-    ticker_state = true;
-  }
-  pixels.show();
+  //if ( ticker_state == true ){
+  //  pixels.setPixelColor(PIXEL_STATUS_LED, color_blue);
+  //  ticker_state = false;
+  //} else {
+  //  pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
+  // ticker_state = true;
+  //}
+  //pixels.show();
 }
 
 //gets called when WiFiManager enters configuration mode
@@ -140,8 +148,8 @@ void setup() {
   
   //set led pin as output
   pixels.begin(); 
-  delay(50);
-  colorWipe(color_off, 50);
+  pixels.setPixelColor(0, pixels.Color(0, 0, 0));     
+  pixels.show();
   
   // start ticker with 0.5 because we start in AP mode and try to connect
   ticker.attach(0.6, tick);
@@ -184,8 +192,8 @@ void setup() {
   carousel.disableAllIndicators();
   ticker.detach();
   //keep LED on
-  pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
-  pixels.show();
+  //pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
+  //pixels.show();
   // update the weather information
   updateData();
   timerPress = millis();
@@ -197,6 +205,13 @@ bool btnClick;
 
 
 void loop() {
+  //Button update
+  BtnA.read();
+  BtnB.read();
+  BtnC.read();
+  if (BtnC.wasReleased()) {
+    screen = (screen + 1) % screenCount;
+  }
   gfx.fillBuffer(MINI_BLACK);
   if (screen == 0) {
     drawTime();
@@ -209,7 +224,7 @@ void loop() {
       delay(remainingTimeBudget);
     }
     drawCurrentWeather();
-    drawAstronomy();
+    //drawAstronomy();
   } else if (screen == 1) {
     drawCurrentWeatherDetail();
   } else if (screen == 2) {
@@ -297,18 +312,18 @@ void updateData() {
 // Progress bar helper
 void drawProgress(uint8_t percentage, String text) {
   gfx.fillBuffer(MINI_BLACK);
-  gfx.drawPalettedBitmapFromPgm(20, 5, ThingPulseLogo);
+  gfx.drawPalettedBitmapFromPgm(60, 5, ThingPulseLogo);
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
   gfx.setColor(MINI_WHITE);
-  gfx.drawString(120, 90, "https://thingpulse.com");
+  gfx.drawString(160, 90, "https://thingpulse.com");
   gfx.setColor(MINI_YELLOW);
 
-  gfx.drawString(120, 146, text);
+  gfx.drawString(160, 146, text);
   gfx.setColor(MINI_WHITE);
-  gfx.drawRect(10, 168, 240 - 20, 15);
+  gfx.drawRect(50, 168, 240 - 20, 15);
   gfx.setColor(MINI_BLUE);
-  gfx.fillRect(12, 170, 216 * percentage / 100, 11);
+  gfx.fillRect(52, 170, 216 * percentage / 100, 11);
 
   gfx.commit();
 }
@@ -325,7 +340,7 @@ void drawTime() {
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setColor(MINI_WHITE);
   String date = WDAY_NAMES[timeinfo->tm_wday] + " " + MONTH_NAMES[timeinfo->tm_mon] + " " + String(timeinfo->tm_mday) + " " + String(1900 + timeinfo->tm_year);
-  gfx.drawString(120, 6, date);
+  gfx.drawString(160, 3, date);
 
   gfx.setFont(ArialRoundedMTBold_36);
 
@@ -335,7 +350,7 @@ void drawTime() {
   } else {
     sprintf(time_str, "%02d:%02d:%02d\n",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
   }
-  gfx.drawString(120, 20, time_str);
+  gfx.drawString(160, 20, time_str);
 
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
   gfx.setFont(ArialMT_Plain_10);
@@ -345,50 +360,47 @@ void drawTime() {
   } else {
     sprintf(time_str, "%s", dstAbbrev);
   }
-  gfx.drawString(195, 27, time_str);  // Known bug: Cuts off 4th character of timezone abbreviation
+  gfx.drawString(235, 27, time_str);  // Known bug: Cuts off 4th character of timezone abbreviation
 }
 
 // draws current weather information
 void drawCurrentWeather() {
   gfx.setTransparentColor(MINI_BLACK);
-  gfx.drawPalettedBitmapFromPgm(0, 55, getMeteoconIconFromProgmem(currentWeather.icon));
+  gfx.drawPalettedBitmapFromPgm(40, 50, getMeteoconIconFromProgmem(currentWeather.icon));
   // Weather Text
 
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setColor(MINI_BLUE);
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
-  gfx.drawString(220, 65, DISPLAYED_CITY_NAME);
+  gfx.drawString(260, 60, DISPLAYED_CITY_NAME);
 
   gfx.setFont(ArialRoundedMTBold_36);
   gfx.setColor(MINI_WHITE);
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
    
-  gfx.drawString(220, 78, String(currentWeather.temp, 1) + (IS_METRIC ? "°C" : "°F"));
+  gfx.drawString(260, 73, String(currentWeather.temp, 1) + (IS_METRIC ? "°C" : "°F"));
 
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setColor(MINI_YELLOW);
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
-  gfx.drawString(220, 118, currentWeather.description);
+  gfx.drawString(260, 113, currentWeather.description);
 
 }
 
 void drawForecast1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
-  drawForecastDetail(x + 10, y + 165, 0);
-  drawForecastDetail(x + 95, y + 165, 1);
-  drawForecastDetail(x + 180, y + 165, 2);
+  drawForecastDetail(x + 10, y + 160, 0);
+  drawForecastDetail(x + 85, y + 160, 1);
+  drawForecastDetail(x + 170, y + 160, 2);
+  drawForecastDetail(x + 255, y + 160, 4);
 }
 
 void drawForecast2(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
-  drawForecastDetail(x + 10, y + 165, 3);
-  drawForecastDetail(x + 95, y + 165, 4);
-  drawForecastDetail(x + 180, y + 165, 5);
+  drawForecastDetail(x + 10, y + 160, 5);
+  drawForecastDetail(x + 85, y + 160, 6);
+  drawForecastDetail(x + 170, y + 160, 7);
+  drawForecastDetail(x + 255, y + 160, 8);
 }
 
-void drawForecast3(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
-  drawForecastDetail(x + 10, y + 165, 6);
-  drawForecastDetail(x + 95, y + 165, 7);
-  drawForecastDetail(x + 180, y + 165, 8);
-}
 
 // helper for the forecast columns
 void drawForecastDetail(uint16_t x, uint16_t y, uint8_t dayIndex) {
@@ -495,11 +507,11 @@ void drawWifiQuality() {
   int8_t quality = getWifiQuality();
   gfx.setColor(MINI_WHITE);
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);  
-  gfx.drawString(228, 9, String(quality) + "%");
+  gfx.drawString(300, 6, String(quality) + "%");
   for (int8_t i = 0; i < 4; i++) {
     for (int8_t j = 0; j < 2 * (i + 1); j++) {
       if (quality > i * 25 || j == 0) {
-        gfx.setPixel(230 + 2 * i, 18 - j);
+        gfx.setPixel(302 + 2 * i, 18 - j);
       }
     }
   }
