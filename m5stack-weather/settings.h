@@ -47,8 +47,8 @@ const String MOON_PHASES[] = {"New Moon", "Waxing Crescent", "First Quarter", "W
                               "Full Moon", "Waning Gibbous", "Third quarter", "Waning Crescent"};
 
 #define UTC_OFFSET +9
-struct dstRule StartRule = {"CEST", Last, Sun, Mar, 2, 3600}; // Central European Summer Time = UTC/GMT +2 hours
-struct dstRule EndRule = {"CET", Last, Sun, Oct, 2, 0};       // Central European Time = UTC/GMT +1 hour
+struct dstRule StartRule = {"JST", Last, Sun, Mar, 2, 0}; // no dst in JP
+struct dstRule EndRule = {"JST", Last, Sun, Oct, 2, 0};      
 
 // values in metric or imperial system?
 const boolean IS_METRIC = true;

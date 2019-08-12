@@ -38,6 +38,7 @@ int BITS_PER_PIXEL = 2; // 2^2 =  4 colors
 
 //for LED status
 #include <Ticker.h>
+bool   ticker_state = true;
 Ticker ticker;
 
 
@@ -52,8 +53,7 @@ ILI9341_SPI tft = ILI9341_SPI(TFT_CS, TFT_DC, TFT_RST);
 MiniGrafx gfx = MiniGrafx(&tft, BITS_PER_PIXEL, palette, 320, 240);
 Carousel carousel(&gfx, 0, 0, 240, 100);
 
-uint32_t color_blue = pixels.Color(0, 0, 100);
-uint32_t color_white = pixels.Color(100, 100, 100);
+uint32_t color_blue = pixels.Color(0, 0, 255);
 uint32_t color_off = pixels.Color(0, 0, 0);
 
 OpenWeatherMapCurrentData currentWeather;
@@ -106,10 +106,12 @@ void tick()
 {
   //toggle state
   // set pin to the opposite state
-  if ( pixels.getPixelColor(PIXEL_STATUS_LED) == color_off){
+  if ( ticker_state == true ){
     pixels.setPixelColor(PIXEL_STATUS_LED, color_blue);
+    ticker_state = false;
   } else {
     pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
+    ticker_state = true;
   }
   pixels.show();
 }
@@ -138,6 +140,7 @@ void setup() {
   
   //set led pin as output
   pixels.begin(); 
+  delay(50);
   colorWipe(color_off, 50);
   
   // start ticker with 0.5 because we start in AP mode and try to connect
