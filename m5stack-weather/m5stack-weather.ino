@@ -13,10 +13,18 @@ Ticker ticker;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(M5STACK_FIRE_NEO_NUM_LEDS, M5STACK_FIRE_NEO_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
-uint32_t color_blue = pixels.Color(0, 0, 255);
-uint32_t color_white = pixels.Color(255, 255, 255);
+uint32_t color_blue = pixels.Color(0, 0, 100);
+uint32_t color_white = pixels.Color(100, 100, 100);
 uint32_t color_off = pixels.Color(0, 0, 0);
 
+// Fill the dots one after the other with a color
+void colorWipe(uint32_t color, uint8_t wait) {
+  for(uint16_t i=0; i<pixels.numPixels(); i++) {
+    pixels.setPixelColor(i, color);
+    pixels.show();
+    delay(wait);
+  }
+}
 
 void tick()
 {
@@ -28,7 +36,6 @@ void tick()
     pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
   }
   pixels.show();
-  
 }
 
 //gets called when WiFiManager enters configuration mode
@@ -47,7 +54,8 @@ void setup() {
   
   //set led pin as output
   pixels.begin(); 
-
+  colorWipe(color_off, 50);
+  
   // start ticker with 0.5 because we start in AP mode and try to connect
   ticker.attach(0.6, tick);
 
