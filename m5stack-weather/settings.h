@@ -1,5 +1,10 @@
 #include <simpleDSTadjust.h>
 #include "secrets.h"
+// CREAT SECRETS HEADER FILE WITH FOLLOW IN:
+// OpenWeatherMap Settings
+// Sign up here to get an API key: https://docs.thingpulse.com/how-tos/openweathermap-key/
+// String OPEN_WEATHER_MAP_APP_ID = "XXXXXXXXXXXXXX"; // < insert openweather key
+
 
 #define TFT_BL          32  // goes to TFT BL
 #define BLK_PWM_CHANNEL 7   // LEDC_CHANNEL_7

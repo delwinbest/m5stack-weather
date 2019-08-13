@@ -3,9 +3,9 @@
 #include <WiFiManager.h> // NOTE: USED DEVELOPMENT BRANCH WHICH SUPPORTS ESP32  https://github.com/tzapu/WiFiManager
 #include <Adafruit_NeoPixel.h>
 #include "ILI9341_SPI.h"
-#include "SunMoonCalc.h"
+#include "SunMoonCalc.h" // In MODIFIED ESP8266 Weather Station Library
 
-#include <JsonListener.h>
+#include <JsonListener.h> // In JSON Streaming Parser Library
 #include <OpenWeatherMapCurrent.h>
 #include <OpenWeatherMapForecast.h>
 #include <Astronomy.h>
