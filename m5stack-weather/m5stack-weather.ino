@@ -1,9 +1,9 @@
 #include "settings.h"
 #include "Button.h"
 #include <WiFiManager.h> // NOTE: USED DEVELOPMENT BRANCH WHICH SUPPORTS ESP32  https://github.com/tzapu/WiFiManager
-#include <Adafruit_NeoPixel.h>
 #include "ILI9341_SPI.h"
 #include "SunMoonCalc.h" // In MODIFIED ESP8266 Weather Station Library
+#include <FastLED.h>
 
 #include <JsonListener.h> // In JSON Streaming Parser Library
 #include <OpenWeatherMapCurrent.h>
@@ -16,12 +16,16 @@
 #include "moonphases.h"
 #include "weathericons.h"
 
+//LED Strip Config:
+#define FASTLED_NUM_LEDS 10
+#define M5STACK_FIRE_NEO_DATA_PIN 15
+#define FASTLED_FORCE_SOFTWARE_SPI
+CRGB leds[FASTLED_NUM_LEDS];
+
 #define MINI_BLACK 0
 #define MINI_WHITE 1
 #define MINI_YELLOW 2
 #define MINI_BLUE 3
-#define M5STACK_FIRE_NEO_NUM_LEDS 10
-#define M5STACK_FIRE_NEO_DATA_PIN 15
 #define BUTTON_A_PIN  39
 #define BUTTON_B_PIN  38
 #define BUTTON_C_PIN  37
@@ -53,17 +57,12 @@ Button BtnA = Button(BUTTON_A_PIN, true, DEBOUNCE_MS);
 Button BtnB = Button(BUTTON_B_PIN, true, DEBOUNCE_MS);
 Button BtnC = Button(BUTTON_C_PIN, true, DEBOUNCE_MS);
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(M5STACK_FIRE_NEO_NUM_LEDS, M5STACK_FIRE_NEO_DATA_PIN, NEO_GRB + NEO_KHZ800);
 // If using software SPI change pins as desired
-// TODO: Remove old adafruit lib
-
 ILI9341_SPI tft = ILI9341_SPI(TFT_CS, TFT_DC, TFT_RST);
 // ILI9341_SPI tft = ILI9341_SPI(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 MiniGrafx gfx = MiniGrafx(&tft, BITS_PER_PIXEL, palette, 320, 240);
 Carousel carousel(&gfx, 0, 0, 240, 100);
 
-//uint32_t color_blue = pixels.Color(0, 0, 255);
-//uint32_t color_off = pixels.Color(0, 0, 0);
 
 OpenWeatherMapCurrentData currentWeather;
 OpenWeatherMapForecastData forecasts[MAX_FORECASTS];
@@ -101,27 +100,20 @@ long timerPress;
 bool canBtnPress;
 time_t dstOffset = 0;
 
-// Fill the dots one after the other with a color
-//void colorWipe(uint32_t color, uint8_t wait) {
-//  for(uint16_t i=0; i<pixels.numPixels(); i++) {
-//    pixels.setPixelColor(i, color);
-//    pixels.show();
-//    delay(wait);
-//  }
-//}
-
 void tick()
 {
-  //toggle state
+  // toggle state
   // set pin to the opposite state
-  //if ( ticker_state == true ){
-  //  pixels.setPixelColor(PIXEL_STATUS_LED, color_blue);
-  //  ticker_state = false;
-  //} else {
-  //  pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
-  // ticker_state = true;
-  //}
-  //pixels.show();
+  if ( ticker_state == true ){
+    // Now turn the LED off
+    leds[0] = CRGB::Black;
+    ticker_state = false;
+  } else {
+    // Now turn the LED on
+    leds[0] = CRGB::Blue;
+    ticker_state = true;
+  }
+  FastLED.show();
 }
 
 //gets called when WiFiManager enters configuration mode
@@ -137,6 +129,7 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+  FastLED.addLeds<NEOPIXEL, M5STACK_FIRE_NEO_DATA_PIN>(leds, FASTLED_NUM_LEDS);
   // Init the back-light LED PWM
   ledcSetup(BLK_PWM_CHANNEL, 44100, 8);
   ledcAttachPin(TFT_BL, BLK_PWM_CHANNEL);
@@ -145,11 +138,6 @@ void setup() {
   tft.setRotation(1);
   gfx.fillBuffer(MINI_BLACK);
   gfx.commit();
-  
-  //set led pin as output
-  pixels.begin(); 
-  pixels.setPixelColor(0, pixels.Color(0, 0, 0));     
-  pixels.show();
   
   // start ticker with 0.5 because we start in AP mode and try to connect
   ticker.attach(0.6, tick);
@@ -191,9 +179,10 @@ void setup() {
   carousel.setFrames(frames, frameCount);
   carousel.disableAllIndicators();
   ticker.detach();
-  //keep LED on
-  //pixels.setPixelColor(PIXEL_STATUS_LED, color_off);
-  //pixels.show();
+  // keep LED off
+  // Now turn the LED off, then pause
+  leds[0] = CRGB::Black;
+  FastLED.show();
   // update the weather information
   updateData();
   timerPress = millis();
@@ -253,6 +242,7 @@ void loop() {
     // go to deepsleep for xx minutes or 0 = permanently
     //    ESP.deepSleep(0,  WAKE_RF_DEFAULT);                       // 0 delay = permanently to sleep
   } 
+
 }
 
 // Update the internet based information and update screen
