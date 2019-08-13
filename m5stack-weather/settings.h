@@ -1,5 +1,5 @@
 #include <simpleDSTadjust.h>
-
+#include "secrets.h"
 
 #define TFT_BL          32  // goes to TFT BL
 #define BLK_PWM_CHANNEL 7   // LEDC_CHANNEL_7
@@ -14,9 +14,6 @@
 const int UPDATE_INTERVAL_SECS  = 10 * 60; // Update every 10 minutes
 const int SLEEP_INTERVAL_SECS   = 0;        // Going to sleep after idle times, set 0 for insomnia
 
-// OpenWeatherMap Settings
-// Sign up here to get an API key: https://docs.thingpulse.com/how-tos/openweathermap-key/
-String OPEN_WEATHER_MAP_APP_ID = "8b2e0f85a04ed3e407f3ff8dc0b2dcb2";
 /*
 Go to https://openweathermap.org/find?q= and search for a location. Go through the
 result set and select the entry closest to the actual location you want to display 
