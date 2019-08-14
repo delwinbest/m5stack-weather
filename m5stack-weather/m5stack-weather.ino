@@ -88,8 +88,9 @@ const char* getMeteoconIconFromProgmem(String iconText);
 const char* getMiniMeteoconIconFromProgmem(String iconText);
 void drawForecast1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y);
 void drawForecast2(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y);
-FrameCallback frames[] = { drawForecast1, drawForecast2 };
-int frameCount = 2;
+void drawAstronomy1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y);
+FrameCallback frames[] = { drawForecast1, drawForecast2, drawAstronomy1 }; 
+int frameCount = 3;
 
 // how many different screens do we have?
 int screenCount = 5;
@@ -134,11 +135,16 @@ void setup() {
   ledcSetup(BLK_PWM_CHANNEL, 44100, 8);
   ledcAttachPin(TFT_BL, BLK_PWM_CHANNEL);
   ledcWrite(BLK_PWM_CHANNEL, 100);  // Set Brightness
+  int string_location = 0;
   gfx.init();
   tft.setRotation(1);
   gfx.fillBuffer(MINI_BLACK);
+  gfx.setFont(ArialMT_Plain_10);
+  gfx.setTextAlignment(TEXT_ALIGN_LEFT);
+  gfx.setColor(MINI_WHITE);
   gfx.commit();
-  
+  gfx.drawString(0, string_location, "Booting...");string_location=string_location+10;
+  gfx.commit();
   // start ticker with 0.5 because we start in AP mode and try to connect
   ticker.attach(0.6, tick);
 
@@ -147,7 +153,8 @@ void setup() {
   WiFiManager wm;
   //reset settings - for testing
   // wm.resetSettings();
-
+  gfx.drawString(0, string_location, "Starting WiFi...");string_location=string_location+10;
+  gfx.commit();
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
   wm.setAPCallback(configModeCallback);
 
@@ -157,6 +164,8 @@ void setup() {
   //and goes into a blocking loop awaiting configuration
   if (!wm.autoConnect()) {
     Serial.println("failed to connect and hit timeout");
+    gfx.drawString(0, string_location, "failed to connect and hit timeout. Restarting...");string_location=string_location+10;
+    gfx.commit();
     //reset and try again, or maybe put it to deep sleep
     ESP.restart();
     delay(1000);
@@ -164,8 +173,11 @@ void setup() {
 
   //if you get here you have connected to the WiFi
   Serial.println("connected...");
-
+  gfx.drawString(0, string_location, "connected...");string_location=string_location+10;
+  gfx.commit();
   Serial.println("Mounting file system...");
+  gfx.drawString(0, string_location, "Mounting file system...");string_location=string_location+10;
+  gfx.commit();
   bool isFSMounted = SPIFFS.begin();
   if (!isFSMounted) {
     Serial.println("Formatting file system...");
@@ -174,6 +186,8 @@ void setup() {
     Serial.println("Formatting done");
   } else {
     Serial.println("File system mounted...");
+    gfx.drawString(0, string_location, "File system mounted...");string_location=string_location+10;
+    gfx.commit();
   }
   drawProgress(100,"Formatting done");
   carousel.setFrames(frames, frameCount);
@@ -213,7 +227,6 @@ void loop() {
       delay(remainingTimeBudget);
     }
     drawCurrentWeather();
-    //drawAstronomy();
   } else if (screen == 1) {
     drawCurrentWeatherDetail();
   } else if (screen == 2) {
@@ -379,18 +392,21 @@ void drawCurrentWeather() {
 
 void drawForecast1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
   drawForecastDetail(x + 10, y + 160, 0);
-  drawForecastDetail(x + 85, y + 160, 1);
+  drawForecastDetail(x + 95, y + 160, 1);
   drawForecastDetail(x + 170, y + 160, 2);
   drawForecastDetail(x + 255, y + 160, 4);
 }
 
 void drawForecast2(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
   drawForecastDetail(x + 10, y + 160, 5);
-  drawForecastDetail(x + 85, y + 160, 6);
+  drawForecastDetail(x + 95, y + 160, 6);
   drawForecastDetail(x + 170, y + 160, 7);
   drawForecastDetail(x + 255, y + 160, 8);
 }
 
+void drawAstronomy1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
+  drawAstronomy(x, y + 160);
+}
 
 // helper for the forecast columns
 void drawForecastDetail(uint16_t x, uint16_t y, uint8_t dayIndex) {
@@ -410,40 +426,39 @@ void drawForecastDetail(uint16_t x, uint16_t y, uint8_t dayIndex) {
 }
 
 // draw moonphase and sunrise/set and moonrise/set
-void drawAstronomy() {
-
+void drawAstronomy( uint16_t x, uint16_t y) {
   gfx.setFont(MoonPhases_Regular_36);
   gfx.setColor(MINI_WHITE);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
-  gfx.drawString(120, 275, String((char) (97 + (moonData.illumination * 26))));
+  gfx.drawString(x + 160, y + 25, String((char) (97 + (moonData.illumination * 26))));
 
   gfx.setColor(MINI_WHITE);
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
   gfx.setColor(MINI_YELLOW);
-  gfx.drawString(120, 250, MOON_PHASES[moonData.phase]);
+  gfx.drawString(x + 160, y, MOON_PHASES[moonData.phase]);
   
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
   gfx.setColor(MINI_YELLOW);
-  gfx.drawString(5, 250, SUN_MOON_TEXT[0]);
+  gfx.drawString(x + 5, y, SUN_MOON_TEXT[0]);
   gfx.setColor(MINI_WHITE);
   time_t time = currentWeather.sunrise + dstOffset;
-  gfx.drawString(5, 276, SUN_MOON_TEXT[1] + ":");
-  gfx.drawString(45, 276, getTime(&time));
+  gfx.drawString(x + 5, y + 26, SUN_MOON_TEXT[1] + ":");
+  gfx.drawString(x + 45, y + 26, getTime(&time));
   time = currentWeather.sunset + dstOffset;
-  gfx.drawString(5, 291, SUN_MOON_TEXT[2] + ":");
-  gfx.drawString(45, 291, getTime(&time));
+  gfx.drawString(x + 5, y + 41, SUN_MOON_TEXT[2] + ":");
+  gfx.drawString(x + 45, y + 41, getTime(&time));
 
   gfx.setTextAlignment(TEXT_ALIGN_RIGHT);
   gfx.setColor(MINI_YELLOW);
-  gfx.drawString(235, 250, SUN_MOON_TEXT[3]);
+  gfx.drawString(x + 315, y, SUN_MOON_TEXT[3]);
   gfx.setColor(MINI_WHITE);
   float lunarMonth = 29.53;
   // approximate moon age
-  gfx.drawString(235, 276, String(moonData.phase <= 4 ? lunarMonth * moonData.illumination / 2.0 : lunarMonth - moonData.illumination * lunarMonth / 2.0, 1) + "d");
-  gfx.drawString(235, 291, String(moonData.illumination * 100, 0) + "%");
-  gfx.drawString(190, 276, SUN_MOON_TEXT[4] + ":");
-  gfx.drawString(190, 291, SUN_MOON_TEXT[5] + ":");
+  gfx.drawString(x + 315, y + 26, String(moonData.phase <= 4 ? lunarMonth * moonData.illumination / 2.0 : lunarMonth - moonData.illumination * lunarMonth / 2.0, 1) + "d");
+  gfx.drawString(x + 315, y + 41, String(moonData.illumination * 100, 0) + "%");
+  gfx.drawString(x + 270, y + 26, SUN_MOON_TEXT[4] + ":");
+  gfx.drawString(x + 270, y + 41, SUN_MOON_TEXT[5] + ":");
 
 }
 
