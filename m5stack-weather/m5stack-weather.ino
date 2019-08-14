@@ -393,14 +393,14 @@ void drawCurrentWeather() {
 void drawForecast1(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
   drawForecastDetail(x + 10, y + 160, 0);
   drawForecastDetail(x + 95, y + 160, 1);
-  drawForecastDetail(x + 170, y + 160, 2);
+  drawForecastDetail(x + 180, y + 160, 2);
   drawForecastDetail(x + 255, y + 160, 4);
 }
 
 void drawForecast2(MiniGrafx *display, CarouselState* state, int16_t x, int16_t y) {
   drawForecastDetail(x + 10, y + 160, 5);
   drawForecastDetail(x + 95, y + 160, 6);
-  drawForecastDetail(x + 170, y + 160, 7);
+  drawForecastDetail(x + 180, y + 160, 7);
   drawForecastDetail(x + 255, y + 160, 8);
 }
 
@@ -466,7 +466,7 @@ void drawCurrentWeatherDetail() {
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
   gfx.setColor(MINI_WHITE);
-  gfx.drawString(120, 2, "Current Conditions");
+  gfx.drawString(160, 2, "Current Conditions");
 
   //gfx.setTransparentColor(MINI_BLACK);
   //gfx.drawPalettedBitmapFromPgm(0, 20, getMeteoconIconFromProgmem(conditions.weatherIcon));
@@ -487,7 +487,7 @@ void drawCurrentWeatherDetail() {
 }
 
 void drawLabelValue(uint8_t line, String label, String value) {
-  const uint8_t labelX = 15;
+  const uint8_t labelX = 55;
   const uint8_t valueX = 150;
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
   gfx.setColor(MINI_YELLOW);
@@ -526,7 +526,7 @@ void drawForecastTable(uint8_t start) {
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
   gfx.setColor(MINI_WHITE);
-  gfx.drawString(120, 2, "Forecasts");
+  gfx.drawString(160, 2, "Forecasts");
   uint16_t y = 0;
 
   String degreeSign = "°F";
@@ -535,74 +535,75 @@ void drawForecastTable(uint8_t start) {
   }
   for (uint8_t i = start; i < start + 4; i++) {
     gfx.setTextAlignment(TEXT_ALIGN_LEFT);
-    y = 45 + (i - start) * 75;
-    if (y > 320) {
+    y = 35 + (i - start) * 75;
+    if (y > 240) {
       break;
     }
     gfx.setColor(MINI_WHITE);
     gfx.setTextAlignment(TEXT_ALIGN_CENTER);
     time_t time = forecasts[i].observationTime + dstOffset;
     struct tm * timeinfo = localtime (&time);
-    gfx.drawString(120, y - 15, WDAY_NAMES[timeinfo->tm_wday] + " " + String(timeinfo->tm_hour) + ":00");
+    gfx.drawString(160, y - 15, WDAY_NAMES[timeinfo->tm_wday] + " " + String(timeinfo->tm_hour) + ":00");
 
    
-    gfx.drawPalettedBitmapFromPgm(0, 15 + y, getMiniMeteoconIconFromProgmem(forecasts[i].icon));
+    gfx.drawPalettedBitmapFromPgm(40, 15 + y, getMiniMeteoconIconFromProgmem(forecasts[i].icon));
     gfx.setTextAlignment(TEXT_ALIGN_LEFT);
     gfx.setColor(MINI_YELLOW);
     gfx.setFont(ArialRoundedMTBold_14);
-    gfx.drawString(10, y, forecasts[i].main);
+    gfx.drawString(50, y, forecasts[i].main);
     gfx.setTextAlignment(TEXT_ALIGN_LEFT);
     
     gfx.setColor(MINI_BLUE);
-    gfx.drawString(50, y, "T:");
+    gfx.drawString(90, y, "T:");
     gfx.setColor(MINI_WHITE);
-    gfx.drawString(70, y, String(forecasts[i].temp, 0) + degreeSign);
+    gfx.drawString(110, y, String(forecasts[i].temp, 0) + degreeSign);
     
     gfx.setColor(MINI_BLUE);
-    gfx.drawString(50, y + 15, "H:");
+    gfx.drawString(90, y + 15, "H:");
     gfx.setColor(MINI_WHITE);
-    gfx.drawString(70, y + 15, String(forecasts[i].humidity) + "%");
+    gfx.drawString(1100, y + 15, String(forecasts[i].humidity) + "%");
 
     gfx.setColor(MINI_BLUE);
-    gfx.drawString(50, y + 30, "P: ");
+    gfx.drawString(90, y + 30, "P: ");
     gfx.setColor(MINI_WHITE);
-    gfx.drawString(70, y + 30, String(forecasts[i].rain, 2) + (IS_METRIC ? "mm" : "in"));
+    gfx.drawString(110, y + 30, String(forecasts[i].rain, 2) + (IS_METRIC ? "mm" : "in"));
 
     gfx.setColor(MINI_BLUE);
-    gfx.drawString(130, y, "Pr:");
+    gfx.drawString(170, y, "Pr:");
     gfx.setColor(MINI_WHITE);
-    gfx.drawString(170, y, String(forecasts[i].pressure, 0) + "hPa");
+    gfx.drawString(210, y, String(forecasts[i].pressure, 0) + "hPa");
     
     gfx.setColor(MINI_BLUE);
-    gfx.drawString(130, y + 15, "WSp:");
+    gfx.drawString(170, y + 15, "WSp:");
     gfx.setColor(MINI_WHITE);
-    gfx.drawString(170, y + 15, String(forecasts[i].windSpeed, 0) + (IS_METRIC ? "m/s" : "mph") );
+    gfx.drawString(210, y + 15, String(forecasts[i].windSpeed, 0) + (IS_METRIC ? "m/s" : "mph") );
 
     gfx.setColor(MINI_BLUE);
-    gfx.drawString(130, y + 30, "WDi: ");
+    gfx.drawString(170, y + 30, "WDi: ");
     gfx.setColor(MINI_WHITE);
-    gfx.drawString(170, y + 30, String(forecasts[i].windDeg, 0) + "°");
+    gfx.drawString(210, y + 30, String(forecasts[i].windDeg, 0) + "°");
 
   }
 }
 
 void drawAbout() {
   gfx.fillBuffer(MINI_BLACK);
-  gfx.drawPalettedBitmapFromPgm(20, 5, ThingPulseLogo);
+  gfx.drawPalettedBitmapFromPgm(60, 5, ThingPulseLogo);
 
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
   gfx.setColor(MINI_WHITE);
-  gfx.drawString(120, 90, "https://thingpulse.com");
+  gfx.drawString(160, 90, "https://thingpulse.com");
 
   gfx.setFont(ArialRoundedMTBold_14);
   gfx.setTextAlignment(TEXT_ALIGN_CENTER);
-  drawLabelValue(7, "Heap Mem:", String(ESP.getFreeHeap() / 1024)+"kb");
-//  drawLabelValue(8, "Flash Mem:", String(ESP.getFlashChipRealSize() / 1024 / 1024) + "MB");
+  drawLabelValue(6, "Heap Mem:", String(ESP.getFreeHeap() / 1024)+"kb");
+  drawLabelValue(7, "PSRAM Mem:", String(ESP.getPsramSize() / 1024 / 1024) + "MB");
+  drawLabelValue(8, "Flash Mem:", String(ESP.getFlashChipSize() / 1024 / 1024) + "MB");
   drawLabelValue(9, "WiFi Strength:", String(WiFi.RSSI()) + "dB");
-//  drawLabelValue(10, "Chip ID:", String(ESP.getChipId()));
-//  drawLabelValue(11, "VCC: ", String(ESP.getVcc() / 1024.0) +"V");
-  drawLabelValue(12, "CPU Freq.: ", String(ESP.getCpuFreqMHz()) + "MHz");
+  drawLabelValue(10, "Chip Rev:", String(ESP.getChipRevision()));
+//  drawLabelValue(10, "VCC: ", String(ESP.getVcc() / 1024.0) +"V");
+  drawLabelValue(11, "CPU Freq.: ", String(ESP.getCpuFreqMHz()) + "MHz");
   char time_str[15];
   const uint32_t millis_in_day = 1000 * 60 * 60 * 24;
   const uint32_t millis_in_hour = 1000 * 60 * 60;
@@ -611,10 +612,10 @@ void drawAbout() {
   uint8_t hours = (millis() - (days * millis_in_day)) / millis_in_hour;
   uint8_t minutes = (millis() - (days * millis_in_day) - (hours * millis_in_hour)) / millis_in_minute;
   sprintf(time_str, "%2dd%2dh%2dm", days, hours, minutes);
-  drawLabelValue(13, "Uptime: ", time_str);
+  drawLabelValue(12, "Uptime: ", time_str);
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
   gfx.setColor(MINI_YELLOW);
-  gfx.drawString(15, 250, "Last Reset: ");
+  gfx.drawString(55, 250, "Last Reset: ");
   gfx.setColor(MINI_WHITE);
 //  gfx.drawStringMaxWidth(15, 265, 240 - 2 * 15, ESP.getResetInfo());
 }
