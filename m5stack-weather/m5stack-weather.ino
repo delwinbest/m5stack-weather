@@ -100,11 +100,13 @@ uint16_t screen = 0;
 long timerPress;
 bool canBtnPress;
 time_t dstOffset = 0;
-
+int string_location = 0;
+ 
 void tick()
 {
   // toggle state
   // set pin to the opposite state
+  FastLED.setBrightness(  100 );
   if ( ticker_state == true ){
     // Now turn the LED off
     leds[0] = CRGB::Black;
@@ -119,10 +121,13 @@ void tick()
 
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (WiFiManager *myWiFiManager) {
-  Serial.println("Entered config mode");
+  Serial.println("Entered config mode, connect to SSID:");
+  gfx.drawString(0, string_location, "Entered config mode, connect to SSID:");string_location=string_location+10;
   Serial.println(WiFi.softAPIP());
   //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
+  gfx.drawString(0, string_location, myWiFiManager->getConfigPortalSSID());string_location=string_location+10;
+  gfx.commit();
   //entered config mode, make led toggle faster
   ticker.attach(0.2, tick);
 }
@@ -135,7 +140,6 @@ void setup() {
   ledcSetup(BLK_PWM_CHANNEL, 44100, 8);
   ledcAttachPin(TFT_BL, BLK_PWM_CHANNEL);
   ledcWrite(BLK_PWM_CHANNEL, 100);  // Set Brightness
-  int string_location = 0;
   gfx.init();
   tft.setRotation(1);
   gfx.fillBuffer(MINI_BLACK);
@@ -147,17 +151,37 @@ void setup() {
   gfx.commit();
   // start ticker with 0.5 because we start in AP mode and try to connect
   ticker.attach(0.6, tick);
+  
+  
+  //Test for GSM Module
+  gfx.drawString(0, string_location, "Looking for GSM Module");string_location=string_location+10;
+  gfx.commit();
+  //Serial2.begin(115200, SERIAL_8N1, SERIAL2_RX_PIN, SERIAL2_TX_PIN);
+  //pinMode(SERIAL2_RESET_PIN, OUTPUT);
+  gfx.drawString(0, string_location, "AT");string_location=string_location+10;
+  gfx.commit();
 
+  // TODO: Figure out what's wrong wtih SIM800L Modeul
+  //Serial2.write("AT");
+  //AT instruction result
+  //while(Serial2.available()){    
+  //  Serial.write(Serial2.read());
+  //}
+  
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wm;
   //reset settings - for testing
   // wm.resetSettings();
+  
+  
+  
   gfx.drawString(0, string_location, "Starting WiFi...");string_location=string_location+10;
   gfx.commit();
   //set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode
+  
   wm.setAPCallback(configModeCallback);
-
+  
   //fetches ssid and pass and tries to connect
   //if it does not connect it starts an access point with the specified name
   //here  "AutoConnectAP"
@@ -167,7 +191,7 @@ void setup() {
     gfx.drawString(0, string_location, "failed to connect and hit timeout. Restarting...");string_location=string_location+10;
     gfx.commit();
     //reset and try again, or maybe put it to deep sleep
-    ESP.restart();
+    ESP.restart(); 
     delay(1000);
   }
 

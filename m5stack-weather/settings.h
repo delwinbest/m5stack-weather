@@ -14,6 +14,9 @@
 #define TFT_SCLK        18  // goes to TFT SCK/CLK
 #define TFT_RST         33  // goes to TFT RESET
 #define TFT_MISO        0    // Not connected
+#define SERIAL2_RX_PIN      16
+#define SERIAL2_TX_PIN      17
+#define SERIAL2_RESET_PIN   5  
 
 #define WIFI_HOSTNAME   "weather-station"
 const int UPDATE_INTERVAL_SECS  = 10 * 60; // Update every 10 minutes
