@@ -4,6 +4,7 @@
 #include "ILI9341_SPI.h"
 #include "SunMoonCalc.h" // In MODIFIED ESP8266 Weather Station Library
 #include <FastLED.h>
+#include <ArduinoOTA.h>
 
 #include <JsonListener.h> // In JSON Streaming Parser Library
 #include <OpenWeatherMapCurrent.h>
@@ -201,6 +202,36 @@ void setup() {
   updateData();
   timerPress = millis();
   canBtnPress = true;
+  ArduinoOTA
+    .onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH)
+        type = "sketch";
+      else // U_SPIFFS
+        type = "filesystem";
+
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      Serial.println("Start updating " + type);
+      gfx.fillBuffer(MINI_BLACK);
+      gfx.setFont(ArialRoundedMTBold_14);
+    })
+    .onEnd([]() {
+      Serial.println("\nEnd");
+    })
+    .onProgress([](unsigned int progress, unsigned int total) {
+      drawProgress((progress / (total / 100)), "OTA Update...");
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    })
+    .onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) { Serial.println("Auth Failed"); drawProgress(0, "ERROR: OTA Auth Failed"); }
+      else if (error == OTA_BEGIN_ERROR) { Serial.println("Begin Failed"); drawProgress(0, "ERROR: OTA Begin Failed"); }
+      else if (error == OTA_CONNECT_ERROR) { Serial.println("Connect Failed"); drawProgress(0, "ERROR: OTA Connect Failed"); }
+      else if (error == OTA_RECEIVE_ERROR) { Serial.println("Receive Failed"); drawProgress(0, "ERROR: OTA Receive Failed"); }
+      else if (error == OTA_END_ERROR) { Serial.println("End Failed"); drawProgress(0, "ERROR: OTA Auth Failed"); }
+    });
+
+  ArduinoOTA.begin();
 }
 
 long lastDrew = 0;
@@ -208,6 +239,7 @@ bool btnClick;
 
 
 void loop() {
+  ArduinoOTA.handle();
   //Button update
   BtnA.read();
   BtnB.read();
